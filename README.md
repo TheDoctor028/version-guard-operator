@@ -78,11 +78,25 @@ According to the example above if the image of the Application changes
 According to the example above if the image of the Deployment changes
 ```json
 {
-  "type": "Deployment",
+  "kind": "Deployment",
   "name": "nginx-deployment",
   "namespace": "web-app",
   "container_name": "nginx",
   "image": "nginx:1.14.2",
   "timestamp": "2019-10-10T10:10:10Z" 
+}
+```
+
+### Feldera (version mismatch Output) -> Operator / Alertmanager
+According to the input examples above
+```json
+{
+    "kind": "Deployment",
+    "name": "nginx-app",
+    "namespace": "web-app",
+    "container_name": "nginx",
+    "current_image": "nginx:1.14.3",
+    "desired_image": "nginx:1.14.2",
+    "timestamp": "2019-10-10T10:10:10Z" 
 }
 ```
