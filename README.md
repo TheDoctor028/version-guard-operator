@@ -1,5 +1,7 @@
 # Version Guard Operator
 
+![](docs/overview.drawio.png)
+
 ## Description
 This kubernetes operator is responsible for monitoring the versions of the applications running in the cluster.
 You can define your apps with the desiered version and the operator will notify you if the version changes. 
