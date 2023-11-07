@@ -10,4 +10,14 @@ plugins:
   scorecard.sdk.operatorframework.io/v2: {}
 projectName: version-guard-operator
 repo: github.com/TheDoctor028/version-guard-operator
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: tmit.bme.hu
+  group: version-gurad
+  kind: Application
+  path: github.com/TheDoctor028/version-guard-operator/api/v1alpha1
+  version: v1alpha1
 version: "3"
