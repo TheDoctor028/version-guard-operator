@@ -20,7 +20,7 @@ import (
 
 const containerVerAnnotation = "container-img-version.version-guard.tmit.bme.hu/%s"
 
-var ignoredNamespaces = []string{"kube-system", "kube-public", "kube-node-lease"}
+var defaultIgnoredNamespaces = []string{"kube-system", "kube-public", "kube-node-lease"}
 
 // DeploymentReconciler reconciles a Deployment object
 type DeploymentReconciler struct {
@@ -37,7 +37,7 @@ func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	_ = log.FromContext(ctx)
 
 	// Ignore deployments in the ignored namespaces
-	for _, namespace := range ignoredNamespaces {
+	for _, namespace := range defaultIgnoredNamespaces {
 		if req.Namespace == namespace {
 			return reconcile.Result{}, nil
 		}
