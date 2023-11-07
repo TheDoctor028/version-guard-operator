@@ -5,9 +5,6 @@
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
 VERSION ?= 0.0.1
 
-# KUBECONFIG defines the path to the kubeconfig file.
-KUBECONFIG=/Users/kristofhetenyi/.kube/mk8s.config
-
 # CHANNELS define the bundle channels used in the bundle.
 # Add a new line here if you would like to change its default config. (E.g CHANNELS = "candidate,fast,stable")
 # To re-generate a bundle for other specific channels without changing the standard setup, you can:
@@ -69,6 +66,11 @@ endif
 # Options are set to exit when a recipe line exits non-zero or a piped command fails.
 SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
+
+.PHONY: py-api
+py-api:
+	pip3 install flask
+	python3 demo/test-api.py
 
 .PHONY: all
 all: build

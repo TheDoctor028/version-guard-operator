@@ -11,6 +11,21 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: system
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: controller-manager-config
+  labels:
+    control-plane: controller-manager
+    app.kubernetes.io/name: configmap
+    app.kubernetes.io/instance: controller-manager-config
+    app.kubernetes.io/component: config
+    app.kubernetes.io/created-by: version-guard-operator
+    app.kubernetes.io/part-of: version-guard-operator
+    app.kubernetes.io/managed-by: kustomize
+data:
+  API_URL: "http://localhost:5000"
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -72,6 +87,9 @@ spec:
         - --leader-elect
         image: controller:latest
         name: manager
+        envFrom:
+          - configMapRef:
+              name: controller-manager-config
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:

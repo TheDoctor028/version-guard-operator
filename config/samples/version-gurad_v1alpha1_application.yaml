@@ -1,12 +1,8 @@
 apiVersion: version-gurad.tmit.bme.hu/v1alpha1
 kind: Application
 metadata:
-  labels:
-    app.kubernetes.io/name: application
-    app.kubernetes.io/instance: application-sample
-    app.kubernetes.io/part-of: version-guard-operator
-    app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/created-by: version-guard-operator
   name: application-sample
+  namespace: default
 spec:
-  # TODO(user): Add fields here
+  name: application-sample
+  image: nginx:1.19.6

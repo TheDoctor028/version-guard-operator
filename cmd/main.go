@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"github.com/joho/godotenv"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -49,6 +50,11 @@ func init() {
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		setupLog.Error(err, "Error loading .env file")
+	}
+
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
