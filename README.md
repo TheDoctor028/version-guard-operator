@@ -23,7 +23,7 @@ to make the desired changes or just a simple node.js application that will send 
 ### CRs
 #### Application
 ```yaml
-apiVersion: version-guard.tmit.bme.hu/v1
+apiVersion: version-guard.tmit.bme.hu/v1alpha1
 kind: Application
 metadata:
   name: nginx-app
