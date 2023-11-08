@@ -1,13 +1,8 @@
 package controller
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"fmt"
 	"github.com/TheDoctor028/version-guard-operator/internal/model"
-	"net/http"
-	"os"
 	"time"
 
 	versionguradv1alpha1 "github.com/TheDoctor028/version-guard-operator/api/v1alpha1"
@@ -20,6 +15,8 @@ import (
 type ApplicationReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+
+	Notifier model.Notifier
 }
 
 // +kubebuilder:rbac:groups=version-gurad.tmit.bme.hu,resources=applications,verbs=get;list;watch;create;update;patch;delete
@@ -33,41 +30,18 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	if err := r.sendApplicationUpdateToApi(app); err != nil {
-		return ctrl.Result{}, err
-	}
-
-	return ctrl.Result{}, nil
-}
-
-func (r *ApplicationReconciler) sendApplicationUpdateToApi(app *versionguradv1alpha1.Application) error {
-	jsonData := model.VersionChangeData{
+	if err := r.Notifier.SendChangeNotification(model.VersionChangeData{
 		Kind:          "Application",
 		Name:          app.Name,
 		ContainerName: app.Name,
 		Namespace:     app.Namespace,
 		Image:         app.Spec.Image,
 		Timestamp:     time.Now().UTC(),
+	}); err != nil {
+		return ctrl.Result{}, err
 	}
 
-	payload, err := json.Marshal(jsonData)
-	if err != nil {
-		return err
-	}
-
-	apiUrl := os.Getenv("API_URL")
-
-	resp, err := http.Post(apiUrl, "application/json", bytes.NewReader(payload))
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("API call failed with status code: %d", resp.StatusCode)
-	}
-
-	return nil
+	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

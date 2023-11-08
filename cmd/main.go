@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"github.com/TheDoctor028/version-guard-operator/internal/api_notifier"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -96,16 +97,24 @@ func main() {
 		os.Exit(1)
 	}
 
+	notifier, err := api_notifier.NewApiNotifier()
+	if err != nil {
+		setupLog.Error(err, "unable to create api notifier")
+		os.Exit(1)
+	}
+
 	if err = (&controller.ApplicationReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Notifier: notifier,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Application")
 		os.Exit(1)
 	}
 	if err = (&controller.DeploymentReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Notifier: notifier,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Deployment")
 		os.Exit(1)

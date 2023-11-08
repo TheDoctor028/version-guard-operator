@@ -1,16 +1,12 @@
 package controller
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/TheDoctor028/version-guard-operator/internal/model"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"net/http"
-	"os"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -26,6 +22,8 @@ var defaultIgnoredNamespaces = []string{"kube-system", "kube-public", "kube-node
 type DeploymentReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+
+	Notifier model.Notifier
 }
 
 //+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
@@ -50,7 +48,14 @@ func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	for _, container := range deployment.Spec.Template.Spec.Containers {
 		if hasImageChanged(deployment, &container) {
-			if err := r.sendChangeToAPI(deployment, &container); err != nil {
+			if err := r.Notifier.SendChangeNotification(model.VersionChangeData{
+				Kind:          "Deployment",
+				Name:          deployment.Name,
+				Namespace:     deployment.Namespace,
+				ContainerName: container.Name,
+				Image:         container.Image,
+				Timestamp:     time.Now().UTC(),
+			}); err != nil {
 				return reconcile.Result{}, err
 			}
 
@@ -79,41 +84,6 @@ func hasImageChanged(deployment *appsv1.Deployment, container *v1.Container) boo
 	annotationKey := fmt.Sprintf(containerVerAnnotation, container.Name)
 	annotationVal, success := deployment.Annotations[annotationKey]
 	return !success || annotationVal != container.Image
-}
-
-func (r *DeploymentReconciler) sendChangeToAPI(deployment *appsv1.Deployment, container *v1.Container) error {
-	data := model.VersionChangeData{
-		Kind:          "Deployment",
-		Name:          deployment.Name,
-		Namespace:     deployment.Namespace,
-		ContainerName: container.Name,
-		Image:         container.Image,
-		Timestamp:     time.Now().UTC(),
-	}
-
-	payload, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-
-	apiUrl := os.Getenv("API_URL")
-	if apiUrl == "" {
-		return fmt.Errorf("API_URL environment variable is not set")
-	}
-
-	// Call the API endpoint with the JSON data
-	resp, err := http.Post(apiUrl, "application/json", bytes.NewBuffer(payload))
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	// Check the response status code
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("API call failed with status code: %d", resp.StatusCode)
-	}
-
-	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
