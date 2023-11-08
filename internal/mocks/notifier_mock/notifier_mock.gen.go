@@ -2,7 +2,7 @@
 // Source: internal/model/notifier.go
 
 // Package mock_model is a generated GoMock package.
-package mock_model
+package notifier_mock
 
 import (
 	reflect "reflect"
