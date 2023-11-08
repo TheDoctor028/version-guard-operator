@@ -82,7 +82,7 @@ func hasImageChanged(deployment *appsv1.Deployment, container *v1.Container) boo
 }
 
 func (r *DeploymentReconciler) sendChangeToAPI(deployment *appsv1.Deployment, container *v1.Container) error {
-	data := model.DeploymentData{
+	data := model.VersionChangeData{
 		Kind:          "Deployment",
 		Name:          deployment.Name,
 		Namespace:     deployment.Namespace,

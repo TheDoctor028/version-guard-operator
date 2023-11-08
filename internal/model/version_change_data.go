@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-type DeploymentData struct {
+type VersionChangeData struct {
 	Kind          string    `json:"kind"`
 	Name          string    `json:"name"`
 	Namespace     string    `json:"namespace"`

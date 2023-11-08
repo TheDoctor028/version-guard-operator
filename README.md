@@ -4,8 +4,8 @@
 
 ## Description
 This kubernetes operator is responsible for monitoring the versions of the applications running in the cluster.
-You can define your apps with the desiered version and the operator will notify you if the version changes. 
-The changes will go to Feldera and get evaluated there. After it's complet the result will go back to the operator
+You can define your apps with the desired version, and the operator will notify you if the version changes. 
+The changes will go to Feldera and get evaluated there. After it's complete the result will go back to the operator
 to make the desired changes or just a simple node.js application that will send a notification to a slack/discord channel via webhook.
 
 ## Tools
