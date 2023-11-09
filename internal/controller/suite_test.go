@@ -1,8 +1,6 @@
 package controller
 
 import (
-	"github.com/TheDoctor028/version-guard-operator/internal/mocks/notifier_mock"
-	"github.com/golang/mock/gomock"
 	"path/filepath"
 	"testing"
 
@@ -66,16 +64,3 @@ var _ = AfterSuite(func() {
 	err := testEnv.Stop()
 	Expect(err).NotTo(HaveOccurred())
 })
-
-func setupReconciler() (ApplicationReconciler, *gomock.Controller, *notifier_mock.MockNotifier) {
-	mockCtr := gomock.NewController(GinkgoT())
-	mockNotifier := notifier_mock.NewMockNotifier(mockCtr)
-	reconciler := ApplicationReconciler{
-		Client: k8sClient,
-		Scheme: k8sClient.Scheme(),
-
-		Notifier: mockNotifier,
-	}
-
-	return reconciler, mockCtr, mockNotifier
-}

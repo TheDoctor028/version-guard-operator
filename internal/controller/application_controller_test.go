@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/TheDoctor028/version-guard-operator/api/v1alpha1"
+	"github.com/TheDoctor028/version-guard-operator/internal/mocks/notifier_mock"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
@@ -16,7 +17,7 @@ import (
 
 var _ = Describe("Application controller", func() {
 	It("should send the data through Notifier if a new Application CR is created", func() {
-		reconciler, mockCtrl, notifierMock := setupReconciler()
+		reconciler, mockCtrl, notifierMock := setupApplicationReconciler()
 
 		app := createTestApplication()
 
@@ -35,7 +36,7 @@ var _ = Describe("Application controller", func() {
 	})
 
 	It("should send the data through Notifier if a new Application CR is created and again when updated", func() {
-		reconciler, mockCtrl, notifierMock := setupReconciler()
+		reconciler, mockCtrl, notifierMock := setupApplicationReconciler()
 
 		app := createTestApplication()
 		defer k8sClient.Delete(context.TODO(), app)
@@ -68,7 +69,7 @@ var _ = Describe("Application controller", func() {
 	})
 
 	It("should return an error if the SendChangeNotification fails", func() {
-		reconciler, mockCtrl, notifierMock := setupReconciler()
+		reconciler, mockCtrl, notifierMock := setupApplicationReconciler()
 
 		app := createTestApplication()
 		defer k8sClient.Delete(context.TODO(), app)
@@ -88,7 +89,7 @@ var _ = Describe("Application controller", func() {
 	})
 
 	It("should return an nil error if the Application CR docent exists", func() {
-		reconciler, mockCtrl, _ := setupReconciler()
+		reconciler, mockCtrl, _ := setupApplicationReconciler()
 
 		res, err := reconciler.Reconcile(context.TODO(), ctrl.Request{
 			NamespacedName: types.NamespacedName{
@@ -103,6 +104,19 @@ var _ = Describe("Application controller", func() {
 
 	})
 })
+
+func setupApplicationReconciler() (ApplicationReconciler, *gomock.Controller, *notifier_mock.MockNotifier) {
+	mockCtr := gomock.NewController(GinkgoT())
+	mockNotifier := notifier_mock.NewMockNotifier(mockCtr)
+	reconciler := ApplicationReconciler{
+		Client: k8sClient,
+		Scheme: k8sClient.Scheme(),
+
+		Notifier: mockNotifier,
+	}
+
+	return reconciler, mockCtr, mockNotifier
+}
 
 func createTestApplication() *v1alpha1.Application {
 	app := &v1alpha1.Application{

@@ -9,13 +9,13 @@ The changes will go to Feldera and get evaluated there. After it's complete the 
 to make the desired changes or just a simple node.js application that will send a notification to a slack/discord channel via webhook.
 
 ## Tools
-- [Operator SDK]()
-- [Kubebuilder]()
-- [Kustomize]()
-- [Golang]()
-- [Kubernetes]()
-- [Feldera]()
-- [Node.js]()
+- [Operator SDK](https://sdk.operatorframework.io)
+- [Kubebuilder](https://kubebuilder.io)
+- [Kustomize](https://kustomize.io)
+- [Golang](https://go.dev)
+- [Kubernetes](https://kubernetes.io)
+- [Feldera](https://www.feldera.com)
+- [Node.js](https://nodejs.org/en)
 
 ## Installation
 

@@ -27,6 +27,7 @@ import (
 type ApplicationSpec struct {
 	Name  string `json:"name"`
 	Image string `json:"image"`
+	//Selector map[string][]string `json:"selector"` TODO
 }
 
 // ApplicationStatus defines the observed state of Application

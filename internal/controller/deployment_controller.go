@@ -66,7 +66,6 @@ func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	return reconcile.Result{}, nil
-
 }
 
 // addAnnotationsContainerVerToDeployment adds an annotations to the deployment with the current image version of the container
