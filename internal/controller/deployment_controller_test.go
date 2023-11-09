@@ -18,83 +18,55 @@ import (
 )
 
 var _ = Describe("Deployment controller", func() {
-	It("should send the data through Notifier if a new Deployment is created", func() {
-		reconciler, mockCtrl, notifierMock := setupDeploymentReconciler()
+	When("a new Deployment is created", func() {
+		It("should not send Notification if there is no Application for the Deployment", func() {
+			reconciler, mockCtrl, notifierMock := setupDeploymentReconciler()
 
-		deployment := createDeploymentTemplate()
-		deployment = createTestDeployment(deployment)
+			deployment := createDeploymentTemplate()
+			deployment = createTestDeployment(deployment)
 
-		expected := model.VersionChangeData{
-			Kind:          model.DeploymentKind,
-			Name:          deployment.Name,
-			Namespace:     deployment.Namespace,
-			ContainerName: deployment.Spec.Template.Spec.Containers[0].Name,
-			Image:         deployment.Spec.Template.Spec.Containers[0].Image,
-			Timestamp:     time.Now().UTC(),
-		}
+			notifierMock.EXPECT().SendChangeNotification(gomock.Any()).Return(nil).Times(0)
+			res, err := reconciler.Reconcile(context.TODO(), ctrl.Request{
+				NamespacedName: types.NamespacedName{
+					Namespace: deployment.Namespace,
+					Name:      deployment.Name,
+				},
+			})
 
-		notifierMock.EXPECT().SendChangeNotification(model.VersionChangeDataEQ(expected)).Return(nil).Times(1)
-
-		res, err := reconciler.Reconcile(context.TODO(), ctrl.Request{
-			NamespacedName: types.NamespacedName{
-				Namespace: deployment.Namespace,
-				Name:      deployment.Name,
-			},
+			assert.Nil(GinkgoT(), err)
+			assert.NotNil(GinkgoT(), res)
+			mockCtrl.Finish()
 		})
-		assert.Nil(GinkgoT(), err)
-		assert.NotNil(GinkgoT(), res)
+		It("should send Notification if there is Application for the Deployment", func() {
+			reconciler, mockCtrl, notifierMock := setupDeploymentReconciler()
 
-		mockCtrl.Finish()
-	})
-	It("should send the data through Notifier if a new Deployment is created and again when updated", func() {
-		reconciler, mockCtrl, notifierMock := setupDeploymentReconciler()
+			deployment := createDeploymentTemplate()
+			deployment.SetLabels(map[string]string{
+				"app": "nginx",
+			})
+			deployment = createTestDeployment(deployment)
 
-		deployment := createDeploymentTemplate()
-		deployment = createTestDeployment(deployment)
+			_ = createTestApplication(createApplicationTemplate())
 
-		expected := model.VersionChangeData{
-			Kind:          model.DeploymentKind,
-			Name:          deployment.Name,
-			Namespace:     deployment.Namespace,
-			ContainerName: deployment.Spec.Template.Spec.Containers[0].Name,
-			Image:         deployment.Spec.Template.Spec.Containers[0].Image,
-			Timestamp:     time.Now().UTC(),
-		}
+			notifierMock.EXPECT().SendChangeNotification(model.VersionChangeDataEQ(model.VersionChangeData{
+				Kind:          model.DeploymentKind,
+				Name:          deployment.Name,
+				Namespace:     deployment.Namespace,
+				ContainerName: deployment.Spec.Template.Spec.Containers[0].Name,
+				Image:         deployment.Spec.Template.Spec.Containers[0].Image,
+				Timestamp:     time.Now(),
+			})).Return(nil).Times(1)
+			res, err := reconciler.Reconcile(context.TODO(), ctrl.Request{
+				NamespacedName: types.NamespacedName{
+					Namespace: deployment.Namespace,
+					Name:      deployment.Name,
+				},
+			})
 
-		notifierMock.EXPECT().SendChangeNotification(model.VersionChangeDataEQ(expected)).Return(nil).Times(1)
-
-		res, err := reconciler.Reconcile(context.TODO(), ctrl.Request{
-			NamespacedName: types.NamespacedName{
-				Namespace: deployment.Namespace,
-				Name:      deployment.Name,
-			},
+			assert.Nil(GinkgoT(), err)
+			assert.NotNil(GinkgoT(), res)
+			mockCtrl.Finish()
 		})
-		assert.Nil(GinkgoT(), err)
-		assert.NotNil(GinkgoT(), res)
-
-		deploymentToUpdate := &v1.Deployment{}
-		err = k8sClient.Get(context.Background(), types.NamespacedName{
-			Name:      deployment.Name,
-			Namespace: deployment.Namespace,
-		}, deploymentToUpdate)
-		assert.Nil(GinkgoT(), err)
-
-		deploymentToUpdate.Spec.Template.Spec.Containers[0].Image = "nginx:v99"
-		err = k8sClient.Update(context.Background(), deploymentToUpdate)
-		assert.Nil(GinkgoT(), err)
-
-		expected.Image = "nginx:v99"
-		notifierMock.EXPECT().SendChangeNotification(model.VersionChangeDataEQ(expected)).Return(nil).Times(1)
-		res, err = reconciler.Reconcile(context.TODO(), ctrl.Request{
-			NamespacedName: types.NamespacedName{
-				Namespace: deployment.Namespace,
-				Name:      deployment.Name,
-			},
-		})
-		assert.Nil(GinkgoT(), err)
-		assert.NotNil(GinkgoT(), res)
-
-		mockCtrl.Finish()
 	})
 })
 
@@ -133,7 +105,7 @@ func createDeploymentTemplate() *v1.Deployment {
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
-							Name:  "nginx-app",
+							Name:  "nginx",
 							Image: "nginx",
 						},
 					},

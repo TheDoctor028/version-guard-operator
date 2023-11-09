@@ -19,7 +19,7 @@ var _ = Describe("Application controller", func() {
 	It("should send the data through Notifier if a new Application CR is created", func() {
 		reconciler, mockCtrl, notifierMock := setupApplicationReconciler()
 
-		app := createTestApplication()
+		app := createTestApplication(createApplicationTemplate())
 
 		notifierMock.EXPECT().SendChangeNotification(gomock.Any()).Return(nil)
 
@@ -38,7 +38,7 @@ var _ = Describe("Application controller", func() {
 	It("should send the data through Notifier if a new Application CR is created and again when updated", func() {
 		reconciler, mockCtrl, notifierMock := setupApplicationReconciler()
 
-		app := createTestApplication()
+		app := createTestApplication(createApplicationTemplate())
 		defer k8sClient.Delete(context.TODO(), app)
 
 		notifierMock.EXPECT().SendChangeNotification(gomock.Any()).Return(nil)
@@ -71,7 +71,7 @@ var _ = Describe("Application controller", func() {
 	It("should return an error if the SendChangeNotification fails", func() {
 		reconciler, mockCtrl, notifierMock := setupApplicationReconciler()
 
-		app := createTestApplication()
+		app := createTestApplication(createApplicationTemplate())
 		defer k8sClient.Delete(context.TODO(), app)
 
 		notifierMock.EXPECT().SendChangeNotification(gomock.Any()).Return(assert.AnError)
@@ -118,8 +118,8 @@ func setupApplicationReconciler() (ApplicationReconciler, *gomock.Controller, *n
 	return reconciler, mockCtr, mockNotifier
 }
 
-func createTestApplication() *v1alpha1.Application {
-	app := &v1alpha1.Application{
+func createApplicationTemplate() *v1alpha1.Application {
+	return &v1alpha1.Application{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("test-app-%s", rand.String(5)),
 			Namespace: "default",
@@ -127,8 +127,14 @@ func createTestApplication() *v1alpha1.Application {
 		Spec: v1alpha1.ApplicationSpec{
 			Name:  "nginx",
 			Image: "nginx:latest",
+			Selector: map[string]string{
+				"app": "nginx",
+			},
 		},
 	}
+}
+
+func createTestApplication(app *v1alpha1.Application) *v1alpha1.Application {
 	err := k8sClient.Create(context.TODO(), app)
 	assert.Nil(GinkgoT(), err)
 

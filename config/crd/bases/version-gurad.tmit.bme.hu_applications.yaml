@@ -39,9 +39,14 @@ spec:
                 type: string
               name:
                 type: string
+              selector:
+                additionalProperties:
+                  type: string
+                type: object
             required:
             - image
             - name
+            - selector
             type: object
           status:
             description: ApplicationStatus defines the observed state of Application

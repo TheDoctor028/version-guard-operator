@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"github.com/TheDoctor028/version-guard-operator/api/v1alpha1"
 	"github.com/TheDoctor028/version-guard-operator/internal/model"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -34,9 +35,14 @@ type DeploymentReconciler struct {
 func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	// Ignore deployments in the ignored namespaces
-	for _, namespace := range defaultIgnoredNamespaces {
-		if req.Namespace == namespace {
+	appList := &v1alpha1.ApplicationList{}
+	err := r.List(ctx, appList, &client.ListOptions{Namespace: ""})
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	for _, app := range appList.Items {
+		if app.Namespace != req.Namespace {
 			return reconcile.Result{}, nil
 		}
 	}
@@ -46,8 +52,13 @@ func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return reconcile.Result{}, err
 	}
 
+	app := findApplicationForDeployment(appList, deployment)
+	if app == nil {
+		return reconcile.Result{}, nil
+	}
+
 	for _, container := range deployment.Spec.Template.Spec.Containers {
-		if hasImageChanged(deployment, &container) {
+		if container.Name == app.Spec.Name && hasImageChanged(deployment, &container) {
 			if err := r.Notifier.SendChangeNotification(model.VersionChangeData{
 				Kind:          "Deployment",
 				Name:          deployment.Name,
@@ -66,6 +77,18 @@ func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	return reconcile.Result{}, nil
+}
+
+// findApplicationForDeployment finds the application that the deployment belongs to
+func findApplicationForDeployment(appList *v1alpha1.ApplicationList, deployment *appsv1.Deployment) *v1alpha1.Application {
+	for _, app := range appList.Items {
+		for key, val := range app.Spec.Selector {
+			if deployment.Labels[key] == val {
+				return &app
+			}
+		}
+	}
+	return nil
 }
 
 // addAnnotationsContainerVerToDeployment adds an annotations to the deployment with the current image version of the container
