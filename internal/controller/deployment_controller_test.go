@@ -52,6 +52,7 @@ var _ = Describe("Deployment controller", func() {
 				Kind:          model.DeploymentKind,
 				Name:          deployment.Name,
 				Namespace:     deployment.Namespace,
+				Selector:      model.ParseSelector(deployment.Spec.Selector.MatchLabels),
 				ContainerName: deployment.Spec.Template.Spec.Containers[0].Name,
 				Image:         deployment.Spec.Template.Spec.Containers[0].Image,
 				Timestamp:     time.Now(),

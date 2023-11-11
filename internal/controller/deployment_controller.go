@@ -63,6 +63,7 @@ func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 				Kind:          "Deployment",
 				Name:          deployment.Name,
 				Namespace:     deployment.Namespace,
+				Selector:      model.ParseSelector(app.Spec.Selector),
 				ContainerName: container.Name,
 				Image:         container.Image,
 				Timestamp:     time.Now().UTC(),

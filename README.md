@@ -28,11 +28,11 @@ kind: Application
 metadata:
   name: nginx-app
   namespace: web-app
-  labels:
-    app: test # Going to look for deployments by this label(s)
 spec:
   name: nginx
   image: nginx:1.14.3
+  selector:
+    app: nginx
 ```
 
 Example deployment to monitor:
@@ -68,6 +68,7 @@ According to the example above if the image of the Application changes
   "type": "Application",
   "name": "nginx-app",
   "namespace": "web-app",
+  "selector": "app=nginx",
   "container_name": "nginx",
   "image": "nginx:1.14.3",
   "timestamp": "2019-10-10T10:10:10Z" 
@@ -81,6 +82,7 @@ According to the example above if the image of the Deployment changes
   "kind": "Deployment",
   "name": "nginx-deployment",
   "namespace": "web-app",
+  "selector": "app=nginx",
   "container_name": "nginx",
   "image": "nginx:1.14.2",
   "timestamp": "2019-10-10T10:10:10Z" 

@@ -33,7 +33,8 @@ func (r *ApplicationReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	if err := r.Notifier.SendChangeNotification(model.VersionChangeData{
 		Kind:          "Application",
 		Name:          app.Name,
-		ContainerName: app.Name,
+		Selector:      model.ParseSelector(app.Spec.Selector),
+		ContainerName: app.Spec.Name,
 		Namespace:     app.Namespace,
 		Image:         app.Spec.Image,
 		Timestamp:     time.Now().UTC(),

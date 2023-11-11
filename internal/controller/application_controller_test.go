@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/TheDoctor028/version-guard-operator/api/v1alpha1"
 	"github.com/TheDoctor028/version-guard-operator/internal/mocks/notifier_mock"
+	"github.com/TheDoctor028/version-guard-operator/internal/model"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo/v2"
 	"github.com/stretchr/testify/assert"
@@ -13,35 +14,26 @@ import (
 	"k8s.io/apimachinery/pkg/util/rand"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"time"
 )
 
 var _ = Describe("Application controller", func() {
-	It("should send the data through Notifier if a new Application CR is created", func() {
-		reconciler, mockCtrl, notifierMock := setupApplicationReconciler()
-
-		app := createTestApplication(createApplicationTemplate())
-
-		notifierMock.EXPECT().SendChangeNotification(gomock.Any()).Return(nil)
-
-		res, err := reconciler.Reconcile(context.TODO(), ctrl.Request{
-			NamespacedName: types.NamespacedName{
-				Namespace: app.Namespace,
-				Name:      app.Name,
-			},
-		})
-		assert.Nil(GinkgoT(), err)
-		assert.NotNil(GinkgoT(), res)
-
-		mockCtrl.Finish()
-	})
-
 	It("should send the data through Notifier if a new Application CR is created and again when updated", func() {
 		reconciler, mockCtrl, notifierMock := setupApplicationReconciler()
 
 		app := createTestApplication(createApplicationTemplate())
 		defer k8sClient.Delete(context.TODO(), app)
 
-		notifierMock.EXPECT().SendChangeNotification(gomock.Any()).Return(nil)
+		expected := model.VersionChangeData{
+			Kind:          "Application",
+			Name:          app.Name,
+			Selector:      model.ParseSelector(app.Spec.Selector),
+			ContainerName: app.Spec.Name,
+			Namespace:     app.Namespace,
+			Image:         app.Spec.Image,
+			Timestamp:     time.Now().UTC(),
+		}
+		notifierMock.EXPECT().SendChangeNotification(model.VersionChangeDataEQ(expected)).Return(nil)
 		res, err := reconciler.Reconcile(context.TODO(), ctrl.Request{
 			NamespacedName: types.NamespacedName{
 				Namespace: app.Namespace,
@@ -55,7 +47,8 @@ var _ = Describe("Application controller", func() {
 		err = k8sClient.Update(context.TODO(), app)
 		assert.Nil(GinkgoT(), err)
 
-		notifierMock.EXPECT().SendChangeNotification(gomock.Any()).Return(nil)
+		expected.Image = "nginx:1.19.2"
+		notifierMock.EXPECT().SendChangeNotification(model.VersionChangeDataEQ(expected)).Return(nil)
 		res, err = reconciler.Reconcile(context.TODO(), ctrl.Request{
 			NamespacedName: types.NamespacedName{
 				Namespace: app.Namespace,
