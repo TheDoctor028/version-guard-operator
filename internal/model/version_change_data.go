@@ -36,9 +36,9 @@ func (v VersionChangeDataMatcher) Matches(x interface{}) bool {
 		got.Namespace == v.expected.Namespace &&
 		got.ContainerName == v.expected.ContainerName &&
 		got.Selector == v.expected.Selector &&
-		got.Image == v.expected.Image
-	// if the timestamps are within 5 seconds of each other for test purposes,  they are the same
-	//((got.Timestamp.Unix() - v.expected.Timestamp.Unix()) < 1000*5)
+		got.Image == v.expected.Image &&
+		(got.Timestamp.Unix()-v.expected.Timestamp.Unix()) < 1000*5
+	// if the timestamps are within 5 seconds of each other for test purposes, they are the same
 }
 
 func (v VersionChangeDataMatcher) String() string {
