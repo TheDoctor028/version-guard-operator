@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"sort"
 	"time"
 )
 
@@ -45,11 +46,18 @@ func (v VersionChangeDataMatcher) String() string {
 	return fmt.Sprintf("%s,", v.expected)
 }
 
-// ParseSelector converts a selector map to a string
+// ParseSelector converts a selector map to a string shorted by key
 func ParseSelector(selector map[string]string) string {
-	var result string
-	for key, val := range selector {
-		result += fmt.Sprintf("%s=%s,", key, val)
+	keys := make([]string, 0, len(selector))
+	for k := range selector {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	result := ""
+
+	for _, k := range keys {
+		result += fmt.Sprintf("%s=%s,", k, selector[k])
 	}
 	return result[:len(result)-1]
 }
