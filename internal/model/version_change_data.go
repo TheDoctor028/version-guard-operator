@@ -18,7 +18,7 @@ type VersionChangeData struct {
 	Selector      string    `json:"selector"`
 	ContainerName string    `json:"container_name"`
 	Image         string    `json:"image"`
-	Timestamp     time.Time `json:"timestamp"`
+	Timestamp     time.Time `json:"ts"`
 }
 
 type VersionChangeDataMatcher struct {
