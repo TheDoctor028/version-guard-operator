@@ -18,7 +18,7 @@ package main
 
 import (
 	"flag"
-	"github.com/TheDoctor028/version-guard-operator/internal/api_notifier"
+	"github.com/TheDoctor028/version-guard-operator/internal/feldera_notifier"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -97,7 +97,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	notifier, err := api_notifier.NewApiNotifier()
+	notifier, err := feldera_notifier.NewApiNotifier()
 	if err != nil {
 		setupLog.Error(err, "unable to create api notifier")
 		os.Exit(1)

@@ -8,6 +8,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -34,6 +35,10 @@ type DeploymentReconciler struct {
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
+	deployment := &appsv1.Deployment{}
+	if err := r.Get(ctx, req.NamespacedName, deployment); client.IgnoreNotFound(err) != nil {
+		return reconcile.Result{}, err
+	}
 
 	appList := &v1alpha1.ApplicationList{}
 	err := r.List(ctx, appList, &client.ListOptions{Namespace: ""})
@@ -45,11 +50,6 @@ func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		if app.Namespace != req.Namespace {
 			return reconcile.Result{}, nil
 		}
-	}
-
-	deployment := &appsv1.Deployment{}
-	if err := r.Get(ctx, req.NamespacedName, deployment); err != nil {
-		return reconcile.Result{}, err
 	}
 
 	app := findApplicationForDeployment(appList, deployment)
@@ -94,6 +94,12 @@ func findApplicationForDeployment(appList *v1alpha1.ApplicationList, deployment 
 
 // addAnnotationsContainerVerToDeployment adds an annotations to the deployment with the current image version of the container
 func (r *DeploymentReconciler) addAnnotationsContainerVerToDeployment(ctx context.Context, deployment *appsv1.Deployment, container v1.Container) error {
+	if err := r.Get(ctx, types.NamespacedName{
+		Namespace: deployment.Namespace,
+		Name:      deployment.Name,
+	}, deployment); client.IgnoreNotFound(err) != nil {
+		return err
+	}
 	if deployment.Annotations == nil {
 		deployment.Annotations = make(map[string]string)
 	}
